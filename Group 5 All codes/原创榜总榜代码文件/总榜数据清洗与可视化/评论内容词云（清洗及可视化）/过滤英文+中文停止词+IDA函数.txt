@@ -1,0 +1,50 @@
+from wordcloud import WordCloud
+import pandas as pd
+from imageio import imread
+import jieba
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+import re
+
+def cut_words(file_content):
+    words = jieba.cut(file_content)
+    return ' '.join(words)
+
+with open("C:\\Users\\86130\\comments2016-2013.txt", "r", encoding='UTF-8') as fin1:
+    file_content = fin1.read()
+    
+    def commment_pic(content):
+        # 分词并过滤英文字符
+        content = re.sub(r'[a-zA-Z]', '', content)
+        all_words = cut_words(content)  # 读取文本
+    
+        # 定义停用词
+        stop = [']','[','的','这个','一个','/','你', '了', ' ','是', '让', '在', '我', '也','呀','啊', '和', '都', '《', '》', '，', '看', '!', '什么', '怎么', '这么', '很', '给', '没有', '不是', '说', '不', '吗', '？', '！', '?', '。', '...']
+        
+        # 使用TfidfVectorizer计算TF-IDF分数
+        vectorizer = TfidfVectorizer(stop_words=stop)
+        tfidf_matrix = vectorizer.fit_transform([all_words])
+        tfidf_scores = dict(zip(vectorizer.get_feature_names(), tfidf_matrix.toarray()[0]))
+        
+        # 读取背景图片
+        back_ground = imread("C:\\Users\\86130\\云.jpg")  # 自己定义图片位置
+        
+        # 创建词云对象并使用TF-IDF分数生成词云
+        wc = WordCloud(
+            font_path="C:\\Windows\\Fonts\\simhei.ttf",  # 设置字体
+            background_color="white",  # 设置词云背景颜色
+            max_words=100,  # 词云允许最大词汇数
+            mask=back_ground,  # 词云形状
+            max_font_size=400,  # 最大字体大小
+            random_state=90  # 配色方案的种数
+        )
+        
+        wc1 = wc.generate_from_frequencies(tfidf_scores)  # 生成词云
+        plt.figure()
+        plt.imshow(wc1)
+        plt.axis("off")
+        plt.show()
+        wc.to_file("词云2016-2013.png")
+        print('succeed！\n')
+
+    commment_pic(file_content)
